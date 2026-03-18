@@ -6,7 +6,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688.svg)](https://fastapi.tiangolo.com)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-0.4-orange.svg)](https://trychroma.com)
 [![Groq](https://img.shields.io/badge/Groq-LLaMA_3.1-purple.svg)](https://groq.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![CI](https://github.com/rakshithmuda22/Documind/actions/workflows/ci.yml/badge.svg)](https://github.com/rakshithmuda22/Documind/actions)
 
 <!-- Add a screenshot or GIF of the app here -->
@@ -205,9 +204,3 @@ So I built DocuMind to solve that. Upload a PDF, ask a question in plain English
 - **Paragraph-aware chunking** with overlap means the system doesn't accidentally split a sentence in half. Retrieval quality is noticeably better compared to naive fixed-size splitting.
 - **Per-session vector stores** keep each user's documents completely isolated. No data leaks between sessions, and cleanup is automatic.
 - **Multi-strategy JSON parsing** handles the reality that LLMs don't always return perfect JSON. The system gracefully recovers from malformed responses instead of crashing.
-
----
-
-## License
-
-MIT
