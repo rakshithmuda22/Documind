@@ -7,7 +7,7 @@
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-0.4-orange.svg)](https://trychroma.com)
 [![Groq](https://img.shields.io/badge/Groq-LLaMA_3.1-purple.svg)](https://groq.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![CI](https://github.com/YOUR_USERNAME/documind/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/documind/actions)
+[![CI](https://github.com/rakshithmuda22/Documind/actions/workflows/ci.yml/badge.svg)](https://github.com/rakshithmuda22/Documind/actions)
 
 <!-- Add a screenshot or GIF of the app here -->
 <!-- ![DocuMind Demo](docs/demo.gif) -->
@@ -92,7 +92,7 @@
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/documind.git
+git clone https://github.com/rakshithmuda22/Documind.git
 cd documind
 ```
 
@@ -186,31 +186,25 @@ documind/
 
 ---
 
-## Interview-Ready: How I Built This
+## Why I Built This
 
-### Why build RAG from scratch instead of using LangChain?
+I kept running into the same problem — reading through long PDFs to find one specific detail buried on page 37. Whether it was research papers for class, documentation for a project, or study material before exams, the process was always the same: scroll, skim, hope you don't miss it.
 
-I built every component manually so I can explain exactly what happens at each step. In an interview, I can walk through the entire pipeline: PDF parsing, chunking strategy, embedding generation, vector search, prompt engineering, and answer generation — without hiding behind a framework.
+So I built DocuMind to solve that. Upload a PDF, ask a question in plain English, and get an answer with the exact page and source it came from. No guessing, no scrolling.
 
-### Chunking strategy and why chunk size matters
+### What makes it actually useful
 
-Documents are split into ~500-token chunks with 50-token overlap. Chunking by paragraph first preserves semantic boundaries. The overlap ensures that information split across chunk boundaries is still retrievable. Too-small chunks lose context; too-large chunks dilute relevance in similarity search.
+- **It cites everything.** Every answer tells you exactly where it came from — page number, file name, and the actual text excerpt. You can verify anything in seconds.
+- **It knows when it doesn't know.** Instead of making things up, it tells you when the documents don't have enough information. The confidence score (High/Medium/Low) gives you an honest read on how reliable each answer is.
+- **Conversations feel natural.** You can ask "What about section 3?" or "Tell me more about that" and it understands the context from your previous questions — no need to repeat yourself every time.
+- **It's completely free to run.** Groq's free tier handles the LLM inference, embeddings run locally on your machine, and ChromaDB needs no external database. Zero cost to get started.
 
-### Why sentence-transformers over OpenAI embeddings?
+### Design decisions worth noting
 
-The all-MiniLM-L6-v2 model runs locally with zero API cost, provides 384-dimensional embeddings, and has no rate limits. For a portfolio demo, this eliminates the dependency on a paid service while delivering strong semantic search quality.
-
-### Per-session ChromaDB collections
-
-Each user session gets an isolated ChromaDB collection. This ensures complete data isolation between users, simplifies cleanup (just delete the collection), and prevents cross-contamination of search results.
-
-### Follow-up question rewriting
-
-When a user asks "Tell me more about that," the system detects it as a follow-up, reads the conversation history, and rewrites it as a standalone query like "Tell me more about the methodology described in section 3." This dramatically improves retrieval quality for conversational interactions.
-
-### Confidence scoring
-
-The LLM self-rates confidence (0.0-1.0) based on how well the retrieved context answers the question. This helps users gauge answer reliability and know when to look at the source documents directly.
+- **No LangChain or heavyweight frameworks** — every piece of the RAG pipeline is written from scratch: PDF parsing, chunk splitting, embedding, vector search, prompt construction, and response generation. This keeps the codebase simple and easy to follow.
+- **Paragraph-aware chunking** with overlap means the system doesn't accidentally split a sentence in half. Retrieval quality is noticeably better compared to naive fixed-size splitting.
+- **Per-session vector stores** keep each user's documents completely isolated. No data leaks between sessions, and cleanup is automatic.
+- **Multi-strategy JSON parsing** handles the reality that LLMs don't always return perfect JSON. The system gracefully recovers from malformed responses instead of crashing.
 
 ---
 
