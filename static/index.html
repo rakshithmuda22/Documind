@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DocuMind — AI Document Intelligence</title>
+<style>
+/* ── Tokens ─────────────────────────────────────────── */
+:root[data-theme="dark"]{
+  --bg:#09090b;--bg2:#111115;--card:#18181b;--hover:#1f1f24;
+  --bdr:#27272a;--bdr2:#3f3f46;--txt:#fafafa;--txt2:#a1a1aa;--txt3:#52525b;
+  --acc:#6366f1;--acc2:#818cf8;--accbg:rgba(99,102,241,.12);
+  --ok:#22c55e;--okbg:rgba(34,197,94,.1);
+  --err:#f43f5e;--errbg:rgba(244,63,94,.1);
+  --warn:#f59e0b;--warnbg:rgba(245,158,11,.1);
+  --sh:0 0 0 1px rgba(255,255,255,.04),0 2px 8px rgba(0,0,0,.5);
+  --usermsg:#2563eb;--usermsgbg:rgba(37,99,235,.15);
+}
+:root[data-theme="light"]{
+  --bg:#f4f4f5;--bg2:#fff;--card:#fff;--hover:#f4f4f5;
+  --bdr:#e4e4e7;--bdr2:#d4d4d8;--txt:#09090b;--txt2:#52525b;--txt3:#a1a1aa;
+  --acc:#4f46e5;--acc2:#6366f1;--accbg:rgba(79,70,229,.1);
+  --ok:#16a34a;--okbg:rgba(22,163,74,.08);
+  --err:#dc2626;--errbg:rgba(220,38,38,.08);
+  --warn:#d97706;--warnbg:rgba(217,119,6,.08);
+  --sh:0 0 0 1px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.08);
+  --usermsg:#2563eb;--usermsgbg:rgba(37,99,235,.08);
+}
+
+/* ── Reset ──────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;
+  background:var(--bg);color:var(--txt);height:100vh;display:flex;
+  line-height:1.6;-webkit-font-smoothing:antialiased;overflow:hidden;
+  transition:background .25s,color .25s}
+
+/* ── Sidebar ────────────────────────────────────────── */
+.sidebar{width:280px;background:var(--bg2);border-right:1px solid var(--bdr);
+  display:flex;flex-direction:column;flex-shrink:0;height:100vh;overflow-y:auto}
+.sidebar-header{padding:20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:var(--acc);display:grid;place-items:center;font-size:16px}
+#thm{width:32px;height:32px;border-radius:8px;border:1px solid var(--bdr);background:var(--card);
+  color:var(--txt2);cursor:pointer;display:grid;place-items:center;transition:all .2s;font-size:14px}
+#thm:hover{border-color:var(--bdr2);color:var(--txt)}
+
+.sidebar-body{flex:1;padding:16px;display:flex;flex-direction:column;gap:16px}
+
+/* Upload area */
+.upload-section h3{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--txt2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.upload-section h3 .dot{width:5px;height:5px;border-radius:50%;background:var(--acc)}
+#dropzone{border:2px dashed var(--bdr2);border-radius:10px;padding:24px 12px;text-align:center;
+  cursor:pointer;transition:all .2s;position:relative}
+#dropzone:hover,#dropzone.over{border-color:var(--acc);background:var(--accbg)}
+#dropzone.loaded{border-style:solid;border-color:var(--ok);background:var(--okbg)}
+#dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:28px;margin-bottom:6px}
+.dz-text{font-size:.85rem;font-weight:600}
+.dz-sub{font-size:.72rem;color:var(--txt2);margin-top:2px}
+
+/* Progress bar */
+.upload-progress{display:none;margin-top:8px}
+.upload-progress .bar{height:4px;border-radius:2px;background:var(--bdr);overflow:hidden}
+.upload-progress .fill{height:100%;background:var(--acc);border-radius:2px;width:0;transition:width .3s}
+
+/* File list */
+.file-list{display:flex;flex-direction:column;gap:6px}
+.file-item{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;
+  font-size:.8rem;display:flex;flex-direction:column;gap:2px}
+.file-item .fname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-item .fmeta{font-size:.7rem;color:var(--txt2)}
+
+/* Clear button */
+#clearBtn{margin-top:auto;padding:10px;border-radius:8px;border:1px solid var(--bdr);
+  background:transparent;color:var(--err);font-size:.8rem;font-weight:600;cursor:pointer;
+  transition:all .2s;width:100%}
+#clearBtn:hover{background:var(--errbg);border-color:var(--err)}
+
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--bdr);font-size:.65rem;color:var(--txt3);text-align:center}
+
+/* ── Main area ──────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;min-width:0}
+
+/* Chat messages */
+.chat-area{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* Empty state */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--txt2)}
+.empty-icon{font-size:56px;opacity:.5}
+.empty-state h2{font-size:1.2rem;font-weight:700;color:var(--txt)}
+.empty-state p{font-size:.9rem;max-width:360px;text-align:center}
+
+/* Message bubbles */
+.msg{display:flex;flex-direction:column;max-width:75%;animation:fadeIn .25s ease}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.assistant{align-self:flex-start;align-items:flex-start}
+.msg-bubble{padding:12px 16px;border-radius:14px;font-size:.9rem;line-height:1.65;word-wrap:break-word}
+.msg.user .msg-bubble{background:var(--usermsg);color:#fff;border-bottom-right-radius:4px}
+.msg.assistant .msg-bubble{background:var(--card);border:1px solid var(--bdr);border-bottom-left-radius:4px;box-shadow:var(--sh)}
+.msg-bubble p{margin-bottom:8px}.msg-bubble p:last-child{margin-bottom:0}
+.msg-bubble code{background:rgba(0,0,0,.2);padding:1px 5px;border-radius:4px;font-size:.82rem}
+.msg-bubble ul,.msg-bubble ol{margin-left:18px;margin-bottom:8px}
+.msg-bubble strong{font-weight:700}
+
+/* Message actions */
+.msg-actions{display:flex;gap:6px;margin-top:4px}
+.msg-actions button{background:transparent;border:none;color:var(--txt3);cursor:pointer;font-size:.7rem;
+  padding:2px 6px;border-radius:4px;transition:all .15s}
+.msg-actions button:hover{color:var(--txt);background:var(--hover)}
+
+/* Confidence badge */
+.confidence{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;
+  padding:2px 8px;border-radius:999px;margin-top:6px}
+.confidence.high{color:var(--ok);background:var(--okbg)}
+.confidence.med{color:var(--warn);background:var(--warnbg)}
+.confidence.low{color:var(--err);background:var(--errbg)}
+
+/* Sources */
+.sources-toggle{background:transparent;border:1px solid var(--bdr);color:var(--txt2);cursor:pointer;
+  font-size:.75rem;padding:4px 10px;border-radius:6px;margin-top:8px;transition:all .15s}
+.sources-toggle:hover{border-color:var(--acc);color:var(--acc)}
+.sources-list{display:none;margin-top:8px;font-size:.78rem;color:var(--txt2);
+  border-left:2px solid var(--acc);padding-left:12px;display:none;flex-direction:column;gap:8px}
+.sources-list.open{display:flex}
+.source-item{display:flex;flex-direction:column;gap:2px}
+.source-item .src-file{font-weight:700;color:var(--acc2);font-size:.72rem}
+.source-item .src-text{font-style:italic;opacity:.8;font-size:.72rem}
+
+/* Follow-up suggestions */
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.suggestion{background:var(--accbg);border:1px solid var(--acc);color:var(--acc2);
+  font-size:.75rem;padding:4px 10px;border-radius:999px;cursor:pointer;transition:all .15s}
+.suggestion:hover{background:var(--acc);color:#fff}
+
+/* Typing indicator */
+.typing{display:none;align-self:flex-start;padding:12px 16px;background:var(--card);
+  border:1px solid var(--bdr);border-radius:14px;border-bottom-left-radius:4px}
+.typing.active{display:flex;gap:4px;align-items:center}
+.typing span{width:7px;height:7px;background:var(--txt3);border-radius:50%;
+  animation:bounce .6s infinite alternate}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+
+/* ── Input bar ──────────────────────────────────────── */
+.input-bar{padding:12px 24px 20px;border-top:1px solid var(--bdr);background:var(--bg2)}
+.input-wrap{display:flex;gap:8px;align-items:flex-end;max-width:800px;margin:0 auto}
+#question{flex:1;resize:none;border:1px solid var(--bdr);border-radius:10px;padding:10px 14px;
+  background:var(--card);color:var(--txt);font-size:.9rem;font-family:inherit;line-height:1.5;
+  max-height:120px;min-height:42px;transition:border-color .2s;outline:none}
+#question:focus{border-color:var(--acc)}
+#question::placeholder{color:var(--txt3)}
+#sendBtn{width:42px;height:42px;border-radius:10px;border:none;background:var(--acc);
+  color:#fff;cursor:pointer;display:grid;place-items:center;transition:all .2s;flex-shrink:0;font-size:18px}
+#sendBtn:hover{opacity:.85}
+#sendBtn:disabled{opacity:.4;cursor:not-allowed}
+.input-hint{font-size:.65rem;color:var(--txt3);text-align:center;margin-top:6px}
+
+/* Error inline */
+.error-msg{background:var(--errbg);border:1px solid var(--err);color:var(--err);
+  border-radius:10px;padding:10px 14px;font-size:.82rem;align-self:center;max-width:500px;text-align:center}
+
+/* ── Animations ─────────────────────────────────────── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes bounce{to{transform:translateY(-6px)}}
+
+/* ── Mobile ─────────────────────────────────────────── */
+.mobile-header{display:none;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--bdr);
+  align-items:center;justify-content:space-between}
+.mobile-header .logo{font-size:.95rem}
+#menuBtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--bdr);background:var(--card);
+  color:var(--txt2);cursor:pointer;display:grid;place-items:center;font-size:16px}
+
+@media(max-width:720px){
+  .sidebar{position:fixed;left:-300px;top:0;height:100%;z-index:200;width:280px;transition:left .25s;box-shadow:4px 0 20px rgba(0,0,0,.3)}
+  .sidebar.open{left:0}
+  .mobile-header{display:flex}
+  .msg{max-width:90%}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199}
+  .overlay.open{display:block}
+}
+</style>
+</head>
+<body>
+
+<!-- Mobile overlay -->
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo"><div class="logo-icon">&#9889;</div> DocuMind</div>
+    <button id="thm" onclick="toggleTheme()" title="Toggle theme">&#9790;</button>
+  </div>
+  <div class="sidebar-body">
+    <div class="upload-section">
+      <h3><span class="dot"></span> Upload Documents</h3>
+      <div id="dropzone">
+        <input type="file" id="fileInput" accept=".pdf"/>
+        <div class="dz-icon">&#128196;</div>
+        <div class="dz-text">Drop a PDF here</div>
+        <div class="dz-sub">or click to browse (max 20 MB)</div>
+      </div>
+      <div class="upload-progress" id="uploadProgress">
+        <div class="bar"><div class="fill" id="uploadFill"></div></div>
+      </div>
+    </div>
+    <div class="file-list" id="fileList"></div>
+    <button id="clearBtn" onclick="clearSession()">&#128465; Clear &amp; Start Over</button>
+  </div>
+  <div class="sidebar-footer">Built with FastAPI &middot; ChromaDB &middot; Groq</div>
+</aside>
+
+<!-- Main area -->
+<div class="main">
+  <div class="mobile-header">
+    <div class="logo"><div class="logo-icon">&#9889;</div> DocuMind</div>
+    <button id="menuBtn" onclick="toggleSidebar()">&#9776;</button>
+  </div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">&#128218;</div>
+      <h2>Upload a PDF to get started</h2>
+      <p>Drop a document in the sidebar, then ask any question about it. You'll get answers with exact page citations.</p>
+    </div>
+  </div>
+
+  <div class="typing" id="typing">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="input-bar">
+    <div class="input-wrap">
+      <textarea id="question" placeholder="Ask a question about your documents..." rows="1"
+                onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button id="sendBtn" onclick="sendQuestion()" disabled title="Send">&#10148;</button>
+    </div>
+    <div class="input-hint">Enter to send &middot; Shift+Enter for new line</div>
+  </div>
+</div>
+
+<script>
+/* ── State ──────────────────────────────────────────── */
+let sessionId = localStorage.getItem('documind_session');
+let uploadedFiles = [];
+let isLoading = false;
+
+const API = '';  // Same origin
+
+/* ── Helpers ────────────────────────────────────────── */
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+function renderMarkdown(text){
+  // Basic markdown: bold, italic, code, lists, citations
+  let h = esc(text);
+  h = h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h = h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  h = h.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // Bullet lists (- or *)
+  h = h.replace(/^[-*]\s+(.+)$/gm,'<li>$1</li>');
+  // Numbered lists (1. 2. etc.)
+  h = h.replace(/^\d+\.\s+(.+)$/gm,'<li>$1</li>');
+  // Wrap consecutive <li> blocks in a single <ul>
+  h = h.replace(/((?:<li>.*?<\/li>\n?)+)/g, m => '<ul>'+m+'</ul>');
+  h = h.replace(/\n{2,}/g,'</p><p>');
+  h = '<p>' + h + '</p>';
+  h = h.replace(/<p><\/p>/g,'');
+  return h;
+}
+
+function confLevel(c){
+  if(c>=0.7) return {cls:'high',label:'High confidence'};
+  if(c>=0.4) return {cls:'med',label:'Medium confidence'};
+  return {cls:'low',label:'Low confidence'};
+}
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+async function api(path,opts={}){
+  const r = await fetch(API+path,opts);
+  if(!r.ok){
+    const body = await r.json().catch(()=>({detail:'Request failed'}));
+    throw new Error(body.detail || `Error ${r.status}`);
+  }
+  return r.json();
+}
+
+/* ── Session management ─────────────────────────────── */
+async function ensureSession(){
+  if(sessionId){
+    try{
+      await api(`/session/${sessionId}`);
+      return;
+    }catch(e){
+      // Session expired or invalid
+      localStorage.removeItem('documind_session');
+      sessionId = null;
+    }
+  }
+  const data = await api('/session/create',{method:'POST'});
+  sessionId = data.session_id;
+  localStorage.setItem('documind_session', sessionId);
+}
+
+async function clearSession(){
+  if(sessionId){
+    try{await api(`/session/${sessionId}`,{method:'DELETE'})}catch(e){}
+  }
+  localStorage.removeItem('documind_session');
+  sessionId = null;
+  uploadedFiles = [];
+  document.getElementById('fileList').innerHTML = '';
+  document.getElementById('chatArea').innerHTML =
+    `<div class="empty-state" id="emptyState">
+      <div class="empty-icon">&#128218;</div>
+      <h2>Upload a PDF to get started</h2>
+      <p>Drop a document in the sidebar, then ask any question about it. You'll get answers with exact page citations.</p>
+    </div>`;
+  document.getElementById('dropzone').classList.remove('loaded');
+  await ensureSession();
+}
+
+/* ── File upload ────────────────────────────────────── */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('over')});
+dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('over'));
+dropzone.addEventListener('drop',e=>{
+  e.preventDefault();
+  dropzone.classList.remove('over');
+  if(e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change',()=>{if(fileInput.files.length) uploadFile(fileInput.files[0])});
+
+async function uploadFile(file){
+  if(!file.name.toLowerCase().endsWith('.pdf')){
+    showError('Please upload a PDF file.');
+    return;
+  }
+  if(file.size > 20*1024*1024){
+    showError('File size exceeds 20 MB limit.');
+    return;
+  }
+
+  await ensureSession();
+
+  const prog = document.getElementById('uploadProgress');
+  const fill = document.getElementById('uploadFill');
+  prog.style.display='block';
+  fill.style.width='30%';
+
+  try{
+    const fd = new FormData();
+    fd.append('session_id', sessionId);
+    fd.append('file', file);
+
+    fill.style.width='60%';
+
+    const data = await api('/documents/upload',{method:'POST',body:fd});
+
+    fill.style.width='100%';
+    dropzone.classList.add('loaded');
+
+    // Add to file list
+    uploadedFiles.push({name:data.filename, pages:data.num_pages, chunks:data.num_chunks});
+    renderFileList();
+
+    // Remove empty state
+    const es = document.getElementById('emptyState');
+    if(es) es.remove();
+
+    // Add system message
+    addMessage('assistant', data.message, null, null, []);
+
+    setTimeout(()=>{prog.style.display='none';fill.style.width='0'},800);
+    document.getElementById('sendBtn').disabled = false;
+    fileInput.value = '';
+  }catch(e){
+    fill.style.width='0';
+    prog.style.display='none';
+    showError(e.message);
+  }
+}
+
+function renderFileList(){
+  const el = document.getElementById('fileList');
+  el.innerHTML = uploadedFiles.map(f =>
+    `<div class="file-item">
+      <span class="fname">&#128196; ${esc(f.name)}</span>
+      <span class="fmeta">${f.pages} pages &middot; ${f.chunks} chunks</span>
+    </div>`
+  ).join('');
+}
+
+/* ── Chat ───────────────────────────────────────────── */
+function handleKey(e){
+  if(e.key==='Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendQuestion();
+  }
+}
+
+async function sendQuestion(){
+  const input = document.getElementById('question');
+  const q = input.value.trim();
+  if(!q || isLoading) return;
+
+  await ensureSession();
+
+  // Close sidebar on mobile after sending
+  if(window.innerWidth <= 720){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
+
+  // Remove empty state
+  const es = document.getElementById('emptyState');
+  if(es) es.remove();
+
+  // Add user message
+  addMessage('user', q);
+  input.value = '';
+  autoResize(input);
+
+  // Show typing
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('typing').classList.add('active');
+  scrollToBottom();
+
+  try{
+    const data = await api('/chat/ask',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session_id:sessionId, question:q}),
+    });
+
+    document.getElementById('typing').classList.remove('active');
+    addMessage('assistant', data.answer, data.confidence, data.sources, data.follow_up_suggestions || []);
+  }catch(e){
+    document.getElementById('typing').classList.remove('active');
+    showError(e.message);
+  }finally{
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+function addMessage(role, content, confidence, sources, suggestions){
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  let html = `<div class="msg-bubble">${role==='assistant' ? renderMarkdown(content) : esc(content)}</div>`;
+
+  if(role==='assistant'){
+    // Actions
+    html += `<div class="msg-actions"><button onclick="copyMsg(this)" title="Copy">&#128203; Copy</button></div>`;
+
+    // Confidence
+    if(confidence !== null && confidence !== undefined){
+      const c = confLevel(confidence);
+      html += `<span class="confidence ${c.cls}">${c.label} (${Math.round(confidence*100)}%)</span>`;
+    }
+
+    // Sources
+    if(sources && sources.length){
+      const srcId = 'src_'+Date.now();
+      html += `<button class="sources-toggle" onclick="document.getElementById('${srcId}').classList.toggle('open')">
+        &#128269; ${sources.length} source${sources.length>1?'s':''}</button>`;
+      html += `<div class="sources-list" id="${srcId}">`;
+      for(const s of sources){
+        html += `<div class="source-item">
+          <span class="src-file">&#128196; ${esc(s.source_filename)} — Page ${s.page_number}</span>
+          <span class="src-text">"${esc(s.text_snippet)}"</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+
+    // Follow-up suggestions
+    if(suggestions && suggestions.length){
+      html += '<div class="suggestions">';
+      for(const s of suggestions){
+        html += `<button class="suggestion" onclick="useSuggestion(this)">${esc(s)}</button>`;
+      }
+      html += '</div>';
+    }
+  }
+
+  div.innerHTML = html;
+  area.appendChild(div);
+  scrollToBottom();
+}
+
+function showError(msg){
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'error-msg';
+  div.textContent = msg;
+  area.appendChild(div);
+  scrollToBottom();
+  setTimeout(()=>div.remove(), 8000);
+}
+
+function scrollToBottom(){
+  const area = document.getElementById('chatArea');
+  requestAnimationFrame(()=>area.scrollTop = area.scrollHeight);
+}
+
+function copyMsg(btn){
+  const bubble = btn.closest('.msg').querySelector('.msg-bubble');
+  navigator.clipboard.writeText(bubble.textContent).then(()=>{
+    btn.textContent = '\u2713 Copied';
+    setTimeout(()=>btn.innerHTML='&#128203; Copy', 1500);
+  });
+}
+
+function useSuggestion(btn){
+  const input = document.getElementById('question');
+  input.value = btn.textContent;
+  autoResize(input);
+  input.focus();
+}
+
+/* ── Theme ──────────────────────────────────────────── */
+function toggleTheme(){
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  localStorage.setItem('documind_theme', next);
+  document.getElementById('thm').innerHTML = next==='dark' ? '&#9790;' : '&#9728;';
+}
+
+/* ── Mobile sidebar ─────────────────────────────────── */
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+/* ── Init ───────────────────────────────────────────── */
+(async function init(){
+  // Restore theme
+  const saved = localStorage.getItem('documind_theme');
+  if(saved){
+    document.documentElement.dataset.theme = saved;
+    document.getElementById('thm').innerHTML = saved==='dark' ? '&#9790;' : '&#9728;';
+  }
+
+  await ensureSession();
+
+  // Enable send only if files are uploaded
+  if(uploadedFiles.length) document.getElementById('sendBtn').disabled = false;
+})();
+</script>
+</body>
+</html>

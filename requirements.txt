@@ -1,0 +1,14 @@
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+groq==0.4.2
+sentence-transformers==2.7.0
+chromadb==0.4.24
+PyMuPDF==1.24.0
+python-multipart==0.0.6
+python-dotenv==1.0.0
+pydantic==2.5.3
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
+torch==2.2.0
+numpy==1.26.4
