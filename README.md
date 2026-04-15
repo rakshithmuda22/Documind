@@ -92,7 +92,7 @@
 
 ```bash
 git clone https://github.com/rakshithmuda22/Documind.git
-cd documind
+cd Documind
 ```
 
 ### 2. Get a free Groq API key
@@ -129,7 +129,9 @@ Open [http://localhost:7860](http://localhost:7860) in your browser.
 ## Running with Docker
 
 ```bash
-docker-compose up --build
+docker compose up --build
+# legacy Compose v1:
+# docker-compose up --build
 ```
 
 The app will be available at [http://localhost:7860](http://localhost:7860).
@@ -143,6 +145,11 @@ pytest tests/ -v
 ```
 
 All LLM calls are mocked — no API key needed for tests.
+
+### Troubleshooting
+
+- **Repository path is case-sensitive:** After `git clone`, the directory is `Documind` (capital **D**). On Linux, `cd documind` will fail — use `cd Documind`.
+- **Native wheels (`torch`, `chromadb`, `sentence-transformers`):** If the app or `pytest` exits with a **segmentation fault** on your machine, use **Docker** (`docker compose up --build` or `docker-compose up --build`) or install the **CPU-only** PyTorch build for your OS/arch from [pytorch.org](https://pytorch.org/get-started/locally/).
 
 ---
 
@@ -159,7 +166,7 @@ All LLM calls are mocked — no API key needed for tests.
 ## Project Structure
 
 ```
-documind/
+Documind/
 ├── main.py                 # FastAPI app with routes and lifecycle
 ├── rag_pipeline.py         # RAG orchestrator and session management
 ├── embeddings.py           # Sentence-transformer embedding service
