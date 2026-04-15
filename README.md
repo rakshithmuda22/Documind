@@ -8,9 +8,6 @@
 [![Groq](https://img.shields.io/badge/Groq-LLaMA_3.1-purple.svg)](https://groq.com)
 [![CI](https://github.com/rakshithmuda22/Documind/actions/workflows/ci.yml/badge.svg)](https://github.com/rakshithmuda22/Documind/actions)
 
-<!-- Add a screenshot or GIF of the app here -->
-<!-- ![DocuMind Demo](docs/demo.gif) -->
-
 ---
 
 ## Features
