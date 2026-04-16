@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -104,10 +105,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS: lock down to an explicit allowlist via CORS_ALLOWED_ORIGINS
+# (comma-separated). Wildcard + credentials is a browser no-op and a
+# security smell, so disable credentials when no allowlist is given.
+_cors_raw = os.getenv("CORS_ALLOWED_ORIGINS", "").strip()
+if _cors_raw:
+    _allowed_origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+    _allow_credentials = True
+else:
+    _allowed_origins = ["*"]
+    _allow_credentials = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_allowed_origins,
+    allow_credentials=_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
