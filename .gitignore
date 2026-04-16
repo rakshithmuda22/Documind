@@ -38,3 +38,4 @@ htmlcov/
 
 # ChromaDB persistence (if ever enabled)
 chroma_data/
+.claude/
