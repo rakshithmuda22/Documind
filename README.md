@@ -145,7 +145,7 @@ All LLM calls are mocked — no API key needed for tests.
 
 ### Troubleshooting
 
-- **Repository path is case-sensitive:** After `git clone`, the directory is `Documind` (capital **D**). On Linux, `cd documind` will fail — use `cd Documind`.
+- **The cloned folder is `Documind` (capital D):** `git clone` names the local directory after the URL, so it is `Documind`. On case-sensitive filesystems (Linux), `cd documind` won't match — use `cd Documind`.
 - **Native wheels (`torch`, `chromadb`, `sentence-transformers`):** If the app or `pytest` exits with a **segmentation fault** on your machine, use **Docker** (`docker compose up --build` or `docker-compose up --build`) or install the **CPU-only** PyTorch build for your OS/arch from [pytorch.org](https://pytorch.org/get-started/locally/).
 
 ---
